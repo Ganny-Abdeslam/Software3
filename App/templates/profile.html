@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block title %}Perfil - Personal Pay{% endblock %}
+
+{% block content %}
+<section class="vh-100">
+    <div class="container py-5 h-75">
+        <div class="row d-flex align-items-center justify-content-center h-100">
+            <div class="col-12 col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Perfil del Usuario</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nombre:</strong> {{ user.fullname }}</p>
+                        <p><strong>RUT:</strong> {{ user.rut }}</p>
+                        <p><strong>Profesión:</strong> {{ user.profesion }}</p>
+                        <p><strong>Cargo:</strong> {{ user.cargo }}</p>
+                        <p><strong>Jornada:</strong> {{ user.jornada }}</p>
+                        <p><strong>Sueldo:</strong> {{ user.sueldo }}</p>
+                        <p><strong>Fecha de Nacimiento:</strong> 
+                            {% if user.fechaNacimiento %}
+                                {{ user.fechaNacimiento.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                <em>No disponible</em>
+                            {% endif %}
+                        </p>
+                        
+                        <p><strong>Email:</strong> {{ user.username }}</p>
+                        <p><strong>Descuentos:</strong> {{ user.descuentos }}</p>
+
+                        <div class="mt-4">
+                            <a href="{{ url_for('layout') }}" class="btn btn-primary">Volver al Inicio</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

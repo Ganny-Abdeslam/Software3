@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+
+{% block title %}Cotizaciones - Personal Pay{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/cotizaciones.css') }}">{% endblock %}
+
+{% block register%}{% endblock %}
+{% block content %}
+<section class="vh-100">
+<div class="container-fluid mt-4">
+
+    <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+    <div class="search-bar">
+        <input class="form-control me-2" id="searchInput" onkeyup="filterTable()" type="search" placeholder="Filtrar por:" aria-label="Filtrar">
+    </div>
+
+    <table id="cotizacionesTable">
+        <thead>
+            <tr>
+                <th colspan="3" class="table-header">Información general</th>
+            </tr>
+            <tr>
+                <th class="text-center">Fecha</th>
+                <th class="text-center">Nombre Usuario</th>
+                <th class="text-center">Información</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if cotizaciones %}
+            {% for cotizacion in cotizaciones %}
+            <tr>
+                <td class="text-center">{{ cotizacion.fecha }}</td>
+                <td class="text-center">{{ cotizacion.fullname }}</td>
+                <td class="text-center">{{ cotizacion.informacion }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+                <td colspan="3" class="text-center text-danger">No se encontraron cotizaciones.</td>
+            {% endif %}
+        </tbody>
+    </table>
+    </div>
+    </div>
+</div>
+</section>
+{% endblock %}
+{% block js %} <script src="{{ url_for('static', filename='js/cotizaciones.js') }}"></script> {% endblock %}

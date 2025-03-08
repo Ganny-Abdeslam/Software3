@@ -1,0 +1,89 @@
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.search-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.search-bar .form-control {
+    width: 100%;
+}
+
+
+.search-bar input {
+    width: 80%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-bar button {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.search-bar button i {
+    font-size: 18px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+th.table-header {
+    background-color: #f2f2f2;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: #666;
+}
+
+tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .search-bar input {
+        width: 70%;
+    }
+}
+
+.container-fluid {
+    width: 100%; /* Asegura que ocupe todo el ancho de la ventana */
+}
+
+
+.row {
+    justify-content: center;
+}
+
+.col-md-10 {
+    width: 70%; /* Para ocupar el 70% en pantallas medianas */
+}
+
+@media (max-width: 992px) {
+    .col-md-10 {
+        width: 90%; /* En pantallas medianas, la tabla ocupa el 90% */
+    }
+}

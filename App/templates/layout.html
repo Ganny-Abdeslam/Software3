@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Med Control{% endblock %}</title>
+    <!-- Enlace a Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">{% endblock %}
+</head>
+<body>
+
+    <!-- Barra de navegación superior con Bootstrap -->
+    <div class="sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-info text-center">
+        <div class="container-fluid">
+            <!-- Título centrado -->
+            <a class="navbar-brand ms-2 text-white fs-1" href="/">Med Control</a>
+
+            <!-- Botones de "Ingresar" y "Registrarse" -->
+            
+            <div class="float-end">
+                {% if not current_user.is_authenticated %}
+                    {% block Login %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary me-2">Ingresar</a>
+                    {% endblock %}
+                    {% block register %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Registrarse</a>
+                    {% endblock %}
+                {% else %}
+                <a href="{{ url_for('logout') }}" class="btn btn-primary me-2">Logout</a>
+                <a href="{{ url_for('profile') }}" class="btn btn-primary me-2">Perfil</a>
+                {% endif %}
+            </div>
+            
+        </div>
+    </nav>
+    
+    {% block navbar%}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarScroll">
+            <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
+                {% for item in menu_items %}
+                <li class="nav-item me-2">
+                    <a class="btn btn-outline-primary {% if item.disabled %} disabled {% endif %}" 
+                    href="{{ item.url }}" 
+                    role="button" 
+                    tabindex="{% if item.disabled %} -1 {% else %} 0 {% endif %}" 
+                    aria-disabled="{{ item.disabled | lower }}">
+                    {{ item.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+    </div>
+
+    <!-- Bloque de contenido dinámico de Flask -->
+    <div class="container-fluid">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <div class="card-footer container-fluid text-body-secondary mt-2 sticky-bottom">
+        <div class="p-3 mb-2 bg-info text-dark pe-5 ps-2">
+            <!-- Ayuda y Correo -->
+            <div class="d-flex justify-content-center align-items-center text-white">
+                <span>¿Necesitas ayuda?&nbsp;</span>
+                <a href="#" class="text-primary">Ingresa aquí</a>
+                <!-- Ícono de correo -->
+                <div class="ms-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-mailbox-flag" viewBox="0 0 16 16">
+                        <path d="M10.5 8.5V3.707l.854-.853A.5.5 0 0 0 11.5 2.5v-2A.5.5 0 0 0 11 0H9.5a.5.5 0 0 0-.5.5v8zM5 7c0 .334-.164.264-.415.157C4.42 7.087 4.218 7 4 7s-.42.086-.585.157C3.164 7.264 3 7.334 3 7a1 1 0 0 1 2 0"/>
+                        <path d="M4 3h4v1H6.646A4 4 0 0 1 8 7v6h7V7a3 3 0 0 0-3-3V3a4 4 0 0 1 4 4v6a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V7a4 4 0 0 1 4-4m0 1a3 3 0 0 0-3 3v6h6V7a3 3 0 0 0-3-3"/>
+                    </svg>
+                </div>
+            </div>
+            <!-- Texto de derechos -->
+            <div class="text-center mt-3 text-white">
+                <p class="mb-0">Todos los derechos reservados</p>
+                <p class="mb-0">Personal Play</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enlace a Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% block js %}<script src="{{ url_for('static', filename='js/layout.js') }}"></script>{% endblock %}
+</body>
+</html>
