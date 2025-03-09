@@ -15,6 +15,7 @@ app = Flask(__name__)
 # Configuración de MongoDB
 app.config.from_object(config['development'])
 mongo = PyMongo(app)
+collection = mongo.db.Software3
 
 csrf = CSRFProtect(app)
 login_manager_app = LoginManager(app)
