@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+
+{% block title %}Artículos - Med Control{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/articulo.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Gestión de Artículos</h2>
+
+    <!-- Formulario de Artículos -->
+    <form id="form-articulo" class="formulario" action="{{ url_for('guardar_articulo') }}" method="POST">
+        {{ form.hidden_tag() }}  <!-- CSRF Token -->
+        
+        <div class="form-group">
+            <label for="codigo">Código:</label>
+            <input type="text" id="codigo" name="codigo" required>
+        </div>
+
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+
+        <div class="form-group">
+            <label for="presentaciones">Presentaciones:</label>
+            <input type="text" id="presentaciones" name="presentaciones" placeholder="Ej: Tableta, Jarabe" required>
+        </div>
+
+        <div class="form-group">
+            <label for="categoria">Categoría:</label>
+            <select id="categoria" name="categoria">
+                <option value="medicamento">Medicamento</option>
+                <option value="servicio">Servicio</option>
+                <option value="insumo">Insumo</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn">Guardar</button>
+    </form>
+
+    <hr>
+
+    <!-- Tabla para mostrar los artículos -->
+    <h3>Lista de Artículos</h3>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Presentaciones</th>
+                <th>Categoría</th>
+            </tr>
+        </thead>
+        <tbody id="articulosTable">
+            {% for articulo in articulos %}
+            <tr>
+                <td>{{ articulo.codigo }}</td>
+                <td>{{ articulo.nombre }}</td>
+                <td>{{ ", ".join(articulo.presentaciones) }}</td>
+                <td>{{ articulo.categoria }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/articulo.js') }}"></script>
+{% endblock %}

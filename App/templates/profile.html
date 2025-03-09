@@ -15,9 +15,6 @@
                         <p><strong>Nombre:</strong> {{ user.fullname }}</p>
                         <p><strong>RUT:</strong> {{ user.rut }}</p>
                         <p><strong>Profesión:</strong> {{ user.profesion }}</p>
-                        <p><strong>Cargo:</strong> {{ user.cargo }}</p>
-                        <p><strong>Jornada:</strong> {{ user.jornada }}</p>
-                        <p><strong>Sueldo:</strong> {{ user.sueldo }}</p>
                         <p><strong>Fecha de Nacimiento:</strong> 
                             {% if user.fechaNacimiento %}
                                 {{ user.fechaNacimiento.strftime('%Y-%m-%d') }}
@@ -26,8 +23,7 @@
                             {% endif %}
                         </p>
                         
-                        <p><strong>Email:</strong> {{ user.username }}</p>
-                        <p><strong>Descuentos:</strong> {{ user.descuentos }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
 
                         <div class="mt-4">
                             <a href="{{ url_for('layout') }}" class="btn btn-primary">Volver al Inicio</a>

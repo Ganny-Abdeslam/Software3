@@ -1,0 +1,78 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Gestión de Bodegas</h2>
+
+    <!-- Crear Bodega -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Crear Nueva Bodega</div>
+        <div class="card-body">
+            <form id="formBodega" class="formulario" action="{{ url_for('crear_bodega') }}" method="POST">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    <label for="nombreBodega" class="form-label">Nombre de la Bodega:</label>
+                    <input type="text" id="nombreBodega" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Crear Bodega</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Seleccionar Bodega -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">Seleccionar Bodega</div>
+        <div class="card-body">
+            <select id="selectBodega" class="form-select">
+                <option selected disabled>Seleccione una bodega</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">Agregar Artículos a la Bodega</div>
+        <div class="card-body">
+            <form id="formArticulo" method="POST">
+                {{ form.hidden_tag() }}  <!-- 🔥 CSRF aquí -->
+    
+                <div class="mb-3">
+                    <label for="selectArticulo" class="form-label">Artículo:</label>
+                    <select id="selectArticulo" name="articulo_id" class="form-select">
+                        <option selected disabled>Seleccione un artículo</option>
+                        {% for articulo in articulos %}
+                        <option value="{{ articulo._id }}">{{ articulo.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+    
+                <div class="mb-3">
+                    <label for="cantidad" class="form-label">Cantidad:</label>
+                    <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
+                </div>
+    
+                <button type="submit" class="btn btn-info">Agregar Artículo</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Inventario de la Bodega -->
+    <table id="tabla-inventario" class="table table-striped table-bordered text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Artículo</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="2" class="text-center">Selecciona una bodega para ver su inventario</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/bodega.js') }}"></script>
+{% endblock %}
