@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const fecha_hora = document.getElementById("fecha_hora").value;
         const motivo = document.getElementById("motivo").value.trim();
         const profesional = profesionalSelect.value;
+        const sitio = document.getElementById("sitio").value;
         const csrfToken = document.querySelector("input[name='csrf_token']")?.value;
 
         if (!profesional) {
@@ -45,7 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
             email,
             fecha_hora,
             motivo,
-            profesional
+            profesional,
+            sitio
         };
 
         try {

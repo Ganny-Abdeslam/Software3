@@ -325,6 +325,7 @@ def obtener_profesionales():
 @app.route("/guardar_cita", methods=["POST"])
 @login_required
 def guardar_cita():
+    print(request.get_json())
     try:
         if not request.is_json:
             return jsonify({"error": "Solicitud debe ser JSON"}), 400
