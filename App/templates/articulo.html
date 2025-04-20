@@ -38,6 +38,16 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label for="lote">Lote:</label>
+            <input type="text" id="lote" name="lote" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="fecha_vencimiento">Fecha de Vencimiento:</label>
+            <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" required>
+        </div>
+
         <button type="submit" class="btn">Guardar</button>
     </form>
 
@@ -52,6 +62,8 @@
                 <th>Nombre</th>
                 <th>Presentaciones</th>
                 <th>Categoría</th>
+                <th>Lote</th>
+                <!-- <th>Fecha de Vencimiento</th> -->
             </tr>
         </thead>
         <tbody id="articulosTable">
@@ -61,6 +73,8 @@
                 <td>{{ articulo.nombre }}</td>
                 <td>{{ ", ".join(articulo.presentaciones) }}</td>
                 <td>{{ articulo.categoria }}</td>
+                <td>{{ articulo.lote }}</td>
+                <!-- <td>{{ articulo.fecha_vencimiento.strftime('%Y-%m-%d') if articulo.fecha_vencimiento }}</td> -->
             </tr>
             {% endfor %}
         </tbody>

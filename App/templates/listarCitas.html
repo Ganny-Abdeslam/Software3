@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block title %}Listar Citas - Med Control{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/articulo.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Listado de Citas</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Paciente</th>
+                <th>Email</th>
+                <th>Fecha y Hora</th>
+                <th>Motivo</th>
+                <th>Profesional</th>
+                <th>Sitio</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-citas">
+            <!-- Aquí se cargarán las filas con JS -->
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/listar_citas.js') }}"></script>
+{% endblock %}

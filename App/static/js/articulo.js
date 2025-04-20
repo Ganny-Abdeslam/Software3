@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${articulo.nombre}</td>
                     <td>${articulo.presentaciones.join(", ")}</td>
                     <td>${articulo.categoria}</td>
+                    <td>${articulo.lote}</td>
                 `;
 
                 tabla.appendChild(fila);
@@ -51,6 +52,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const nombre = document.getElementById("nombre").value.trim();
         const presentaciones = document.getElementById("presentaciones").value.trim();
         const categoria = document.getElementById("categoria").value;
+        const lote = document.getElementById("lote").value.trim();
+        const fecha_vencimiento = document.getElementById("fecha_vencimiento").value;
         const csrfToken = document.querySelector("input[name='csrf_token']")?.value; // Opcional
 
         if (!codigo || !nombre || !presentaciones || !categoria) {
@@ -62,7 +65,9 @@ document.addEventListener("DOMContentLoaded", function () {
             codigo,
             nombre,
             presentaciones: presentaciones.split(", "),
-            categoria
+            categoria,
+            lote,
+            fecha_vencimiento
         };
 
         try {

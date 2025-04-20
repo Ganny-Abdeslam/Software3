@@ -3,10 +3,12 @@ from flask_pymongo import PyMongo
 from flask_wtf.csrf import CSRFProtect
 from config import config
 from datetime import datetime
-from forms import ArticuloForm, BodegaForm
+from forms import ArticuloForm, BodegaForm, CitasForm
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
+from flask_mail import Mail, Message
+from bson.json_util import dumps
 
 from models.User import User
 
@@ -21,9 +23,21 @@ csrf = CSRFProtect(app)
 login_manager_app = LoginManager(app)
 login_manager_app.login_view = "login"
 
+# Configuración de correo
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Cambia si usas otro proveedor
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'avanzadanegocios@gmail.com'
+app.config['MAIL_PASSWORD'] = 'iamd zvnp ucuj ifpg'
+app.config['MAIL_DEFAULT_SENDER'] = 'avanzadanegocios@gmail.com'
+
+mail = Mail(app)
+
 menu_items = [
     {"name": "Agregar Artículo", "url": "articulo", "disabled": False},
-    {"name": "Administrar Bodegas", "url": "bodegas", "disabled": False}
+    {"name": "Administrar Bodegas", "url": "bodegas", "disabled": False},
+    {"name": "Agendar Citas", "url": "citas", "disabled": False},
+    {"name": "Ver Citas", "url": "listaCitas", "disabled": False}
     ]
 
 @login_manager_app.user_loader
@@ -59,6 +73,8 @@ def guardar_articulo():
         nombre = data.get("nombre")
         presentaciones = data.get("presentaciones")
         categoria = data.get("categoria")
+        lote = data.get("lote")
+        fecha_vencimiento = data.get("fecha_vencimiento")
 
         if not all([codigo, nombre, presentaciones, categoria]):
             return jsonify({"error": "Todos los campos son obligatorios"}), 400
@@ -70,15 +86,22 @@ def guardar_articulo():
         else:
             return jsonify({"error": "El campo 'presentaciones' debe ser una lista o una cadena de texto"}), 400
 
+        try:
+            fecha_vencimiento_dt = datetime.strptime(fecha_vencimiento, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"error": "El formato de fecha debe ser YYYY-MM-DD"}), 400
+
         articulo = {
             "codigo": codigo,
             "nombre": nombre,
             "presentaciones": presentaciones_list,
             "categoria": categoria,
+            "lote": lote,
+            "fecha_vencimiento": fecha_vencimiento_dt,
             "usuario_id": ObjectId(current_user.id)
         }
 
-        mongo.db.articulos.insert_one(articulo)
+        mongo.db.articulosMed.insert_one(articulo)
 
         return jsonify({"mensaje": "Artículo guardado exitosamente"}), 201
 
@@ -89,7 +112,7 @@ def guardar_articulo():
 @login_required
 def listar_articulos():
     try:
-        articulos = list(mongo.db.articulos.find({"usuario_id": ObjectId(current_user.id)}))
+        articulos = list(mongo.db.articulosMed.find({"usuario_id": ObjectId(current_user.id)}))
         for articulo in articulos:
             articulo["_id"] = str(articulo["_id"])
         return jsonify({"articulos": articulos}), 200
@@ -275,7 +298,7 @@ def obtener_inventario(bodega_id):
         # Buscar los nombres de los artículos en MongoDB
         for item in inventario:
             articulo_id = ObjectId(item["articulo"])
-            articulo = mongo.db.articulos.find_one({"_id": articulo_id}, {"nombre": 1})
+            articulo = mongo.db.articulosMed.find_one({"_id": articulo_id}, {"nombre": 1})
             item["articulo"] = articulo["nombre"] if articulo else "Artículo desconocido"
 
         print("📦 Inventario procesado:", inventario)  # <-- DEBUG
@@ -283,12 +306,99 @@ def obtener_inventario(bodega_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
 @app.route("/bodegas")
 @login_required
 def bodega():
     form = BodegaForm()
     return render_template("bodega.html", menu_items=menu_items, form=form)
+
+@app.route("/profesionales", methods=["GET"])
+@login_required
+def obtener_profesionales():
+    try:
+        profesionales = mongo.db.users.find({}, {"fullname": 1})
+        lista = [{"id": str(p["_id"]), "nombre": p["fullname"]} for p in profesionales]
+        return jsonify(lista), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/guardar_cita", methods=["POST"])
+@login_required
+def guardar_cita():
+    try:
+        if not request.is_json:
+            return jsonify({"error": "Solicitud debe ser JSON"}), 400
+
+        data = request.get_json()
+        print("DATA RECIBIDA:", data)
+
+        paciente_id = data.get("paciente_id")
+        paciente = data.get("paciente")
+        email = data.get("email")
+        fecha_hora = data.get("fecha_hora")
+        motivo = data.get("motivo")
+        sitio = data.get("sitio")  # sitio enviado desde el frontend
+
+        if not all([paciente_id, paciente, fecha_hora, motivo, sitio]):
+            return jsonify({"error": "Todos los campos son obligatorios"}), 400
+
+        # Buscar el nombre completo del profesional
+        user_data = mongo.db.users.find_one({"_id": ObjectId(current_user.id)})
+        profesional = user_data.get("fullname", "Desconocido")
+
+        cita = {
+            "paciente_id": paciente_id,
+            "paciente": paciente,
+            "email": email,
+            "fecha_hora": fecha_hora,
+            "motivo": motivo,
+            "sitio": sitio,
+            "profesional": profesional,
+            "estado": "A",  # por defecto activa
+            "usuario_id": ObjectId(current_user.id)
+        }
+
+        mongo.db.citas.insert_one(cita)
+
+        # Enviar correo de confirmación
+        try:
+            msg = Message(
+                subject="Confirmación de Cita",
+                recipients=[email],  # o data.get("email") si viene desde el formulario
+                body=f"Hola {paciente}, tu cita ha sido agendada para el {fecha_hora}.\nMotivo: {motivo}"
+            )
+            mail.send(msg)
+            print("📧 Correo enviado correctamente")
+        except Exception as e:
+            print(f"❌ Error al enviar el correo: {e}")
+
+        return jsonify({"mensaje": "Cita guardada exitosamente"}), 201
+
+    except Exception as e:
+        print("Error al guardar la cita:", e)
+        return jsonify({"error": f"Hubo un error al guardar la cita: {str(e)}"}), 500
+
+@app.route("/listar_citas", methods=["GET"])
+@login_required
+def listar_citas():
+    try:
+        # Obtener todas las citas de la base de datos
+        citas = list(mongo.db.citas.find({"estado": "A"}))
+        return dumps(citas), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/listaCitas")
+@login_required
+def listaCitasView():
+    form = CitasForm()
+    return render_template("listarCitas.html", menu_items=menu_items, form=form)
+
+@app.route("/citas")
+@login_required
+def cita():
+    form = CitasForm()
+    return render_template("cita.html", menu_items=menu_items, form=form)
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0')

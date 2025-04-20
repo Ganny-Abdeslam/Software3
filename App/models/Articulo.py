@@ -1,9 +1,11 @@
 class Articulo:
-    def __init__(self, codigo, nombre, presentaciones, categoria, extras=None):
+    def __init__(self, codigo, nombre, presentaciones, categoria, lote, fecha_vencimiento, extras=None):
         self.codigo = codigo
         self.nombre = nombre
         self.presentaciones = presentaciones
         self.categoria = categoria
+        self.lote = lote
+        self.fecha_vencimiento = fecha_vencimiento
         self.extras = extras if extras else {}  # Atributos adicionales
 
     def to_mongo(self):
@@ -12,6 +14,8 @@ class Articulo:
             "nombre": self.nombre,
             "presentaciones": self.presentaciones,
             "categoria": self.categoria,
+            "lote": self.lote,
+            "fecha_vencimiento": self.fecha_vencimiento,
             **self.extras  # Se agregan atributos extra según la categoría
         }
 
