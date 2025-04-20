@@ -4,27 +4,60 @@
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/articulo.css') }}">
+<style>
+    .table-container {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .table thead th {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    h2 {
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Listado de Citas</h2>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Paciente</th>
-                <th>Email</th>
-                <th>Fecha y Hora</th>
-                <th>Motivo</th>
-                <th>Profesional</th>
-                <th>Sitio</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody id="tabla-citas">
-            <!-- Aquí se cargarán las filas con JS -->
-        </tbody>
-    </table>
+<div class="container mt-5">
+    <div class="table-container">
+        <h2 class="mb-4">Listado de Citas</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Email</th>
+                        <th>Fecha y Hora</th>
+                        <th>Motivo</th>
+                        <th>Profesional</th>
+                        <th>Sitio</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-citas">
+                    <!-- Aquí se cargarán las filas con JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
