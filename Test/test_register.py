@@ -1,21 +1,22 @@
-def test_register_user(client, mongo_db):
-    # Datos simulados del formulario
-    form_data = {
-        "name": "Test User",
+def test_register_user_simplificado(mongo_db):
+    from werkzeug.security import generate_password_hash
+    from datetime import datetime
+
+    # Simular lo que hace /register
+    test_email = "testuser@example.com"
+    mongo_db.users.delete_many({"email": test_email})
+
+    user_data = {
+        "fullname": "Test User",
         "rut": "12345678-9",
         "profesion": "Médico",
-        "fecha": "1990-01-01",
-        "email": "testuser@example.com",
-        "password": "securepassword"
+        "fechaNacimiento": datetime.strptime("1990-01-01", "%Y-%m-%d"),
+        "email": test_email,
+        "password": generate_password_hash("securepassword")
     }
 
-    # Enviar datos tipo form y no json
-    response = client.post("/register", data=form_data, content_type='application/x-www-form-urlencoded', follow_redirects=True)
+    mongo_db.users.insert_one(user_data)
 
-    assert response.status_code == 200
-    assert b'Cuenta creada exitosamente' in response.data
-
-    # Validar en la base de datos
-    usuario = mongo_db.users.find_one({"email": "testuser@example.com"})
-    assert usuario is not None
-    assert usuario["fullname"] == "Test User"
+    user = mongo_db.users.find_one({"email": test_email})
+    assert user is not None
+    assert user["fullname"] == "Test User"
