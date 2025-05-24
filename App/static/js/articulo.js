@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const categoria = document.getElementById("categoria").value;
         const lote = document.getElementById("lote").value.trim();
         const fecha_vencimiento = document.getElementById("fecha_vencimiento").value;
-        const csrfToken = document.querySelector("input[name='csrf_token']")?.value; // Opcional
+        let csrfToken = document.querySelector('input[name="csrf_token"]').value;  // 🔥 Obtener CSRF token
 
         if (!codigo || !nombre || !presentaciones || !categoria) {
             alert("Todos los campos son obligatorios.");
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                    ...(csrfToken && { "X-CSRFToken": csrfToken }) // Añadir CSRF si está presente
+                    "X-CSRFToken": csrfToken// Añadir CSRF si está presente
                 },
                 body: JSON.stringify(articuloData)
             });

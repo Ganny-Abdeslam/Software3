@@ -17,3 +17,6 @@ class User(UserMixin):
             fullname=user_data["fullname"],
             profesion=user_data["profesion"]
         )
+    
+    def get_id(self):
+        return str(self._id)

@@ -37,7 +37,8 @@ menu_items = [
     {"name": "Agregar Artículo", "url": "articulo", "disabled": False},
     {"name": "Administrar Bodegas", "url": "bodegas", "disabled": False},
     {"name": "Agendar Citas", "url": "citas", "disabled": False},
-    {"name": "Ver Citas", "url": "listaCitas", "disabled": False}
+    {"name": "Ver Citas", "url": "listaCitas", "disabled": False},
+    {"name": "Administrar Citas", "url": "admin_citas", "disabled": False}
     ]
 
 @login_manager_app.user_loader
@@ -140,6 +141,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        print("📨 Formulario recibido:", request.form)
         nombre, rut, profesion, fecha_nacimiento, email, password = (
             request.form.get('name'),
             request.form.get('rut'),
@@ -400,6 +402,74 @@ def listaCitasView():
 def cita():
     form = CitasForm()
     return render_template("cita.html", menu_items=menu_items, form=form)
+
+@app.route("/admin_citas")
+@login_required
+def admin_citas_view():
+    form = CitasForm()
+    return render_template("adminCitas.html", menu_items=menu_items, form=form)
+
+@app.route("/mis_citas", methods=["GET"])
+@login_required
+def obtener_mis_citas():
+    try:
+        citas = list(mongo.db.citas.find({
+            "usuario_id": ObjectId(current_user.id),
+            "estado": "A"
+        }))
+        return dumps(citas), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/actualizar_cita/<cita_id>", methods=["PUT"])
+@login_required
+def actualizar_cita(cita_id):
+    try:
+        data = request.get_json()
+        fecha_hora = data.get("fecha_hora")
+        motivo = data.get("motivo")
+        estado = data.get("estado")
+
+        if not all([fecha_hora, motivo, estado]):
+            return jsonify({"error": "Todos los campos son requeridos"}), 400
+
+        resultado = mongo.db.citas.update_one(
+            {
+                "_id": ObjectId(cita_id),
+                "usuario_id": ObjectId(current_user.id)
+            },
+            {
+                "$set": {
+                    "fecha_hora": fecha_hora,
+                    "motivo": motivo,
+                    "estado": estado
+                }
+            }
+        )
+
+        if resultado.matched_count == 0:
+            return jsonify({"error": "Cita no encontrada o no autorizada"}), 404
+
+        return jsonify({"mensaje": "Cita actualizada correctamente"}), 200
+
+    except Exception as e:
+        print("Error actualizando cita:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/atender_cita/<cita_id>", methods=["PUT"])
+@login_required
+def atender_cita(cita_id):  # ¡agrega cita_id aquí!
+    try:
+        result = mongo.db.citas.update_one(
+            {"_id": ObjectId(cita_id), "usuario_id": ObjectId(current_user.id)},
+            {"$set": {"estado": "atendido"}}
+        )
+        if result.modified_count == 1:
+            return jsonify({"mensaje": "Cita marcada como atendida"}), 200
+        else:
+            return jsonify({"error": "No se encontró la cita o no se pudo actualizar"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0')
