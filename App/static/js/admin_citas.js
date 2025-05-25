@@ -66,10 +66,12 @@ async function editarCita(citaId) {
 // Marcar como atendido
 async function atenderCita(citaId) {
   if (!confirm("¿Deseas marcar esta cita como atendida?")) return;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
   try {
     const res = await fetch(`/atender_cita/${citaId}`, {
-      method: "PUT"
+      method: "PUT",
+      "X-CSRFToken": csrfToken
     });
 
     const contentType = res.headers.get("content-type") || "";

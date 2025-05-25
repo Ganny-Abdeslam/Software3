@@ -38,7 +38,8 @@ menu_items = [
     {"name": "Administrar Bodegas", "url": "bodegas", "disabled": False},
     {"name": "Agendar Citas", "url": "citas", "disabled": False},
     {"name": "Ver Citas", "url": "listaCitas", "disabled": False},
-    {"name": "Administrar Citas", "url": "admin_citas", "disabled": False}
+    {"name": "Administrar Citas", "url": "admin_citas", "disabled": False},
+    {"name": "Facturar", "url": "factura", "disabled": False}
     ]
 
 @login_manager_app.user_loader
@@ -458,18 +459,175 @@ def actualizar_cita(cita_id):
 
 @app.route("/atender_cita/<cita_id>", methods=["PUT"])
 @login_required
-def atender_cita(cita_id):  # ¡agrega cita_id aquí!
+@csrf.exempt
+def atender_cita(cita_id):
     try:
+        cita = mongo.db.citas.find_one({
+            "_id": ObjectId(cita_id),
+            "usuario_id": ObjectId(current_user.id)
+        })
+
+        if not cita:
+            return jsonify({"error": "No se encontró la cita"}), 404
+
+        # Actualizar el estado
         result = mongo.db.citas.update_one(
-            {"_id": ObjectId(cita_id), "usuario_id": ObjectId(current_user.id)},
+            {"_id": ObjectId(cita_id)},
             {"$set": {"estado": "atendido"}}
         )
+
         if result.modified_count == 1:
+            # Enviar correo al paciente
+            email = cita.get("email")
+            paciente = cita.get("paciente")
+            fecha_hora = cita.get("fecha_hora")
+
+            if email:
+                try:
+                    msg = Message(
+                        subject="📬 Tu cita fue atendida",
+                        recipients=[email],
+                        body=f"Hola {paciente},\n\nTu cita programada para el {fecha_hora} ha sido marcada como *atendida*.\n\nGracias por confiar en nosotros.\n\nMedControl"
+                    )
+                    mail.send(msg)
+                    print("📧 Correo de atención enviado correctamente")
+                except Exception as e:
+                    print(f"❌ Error al enviar el correo de atención: {e}")
+            else:
+                print("⚠️ La cita no tiene correo asociado, no se puede enviar notificación")
+
             return jsonify({"mensaje": "Cita marcada como atendida"}), 200
         else:
-            return jsonify({"error": "No se encontró la cita o no se pudo actualizar"}), 404
+            return jsonify({"error": "No se pudo actualizar el estado de la cita"}), 500
+
     except Exception as e:
+        print("❌ Error en atender_cita:", e)
         return jsonify({"error": str(e)}), 500
+
+@app.route('/factura')
+@login_required
+def factura():
+    docs = mongo.db.bodegas.find()
+    bodegas = [{
+        "_id": str(b["_id"]),
+        "nombre": b["nombre"]
+    } for b in docs]
+
+    print("Bodegas cargadas:", bodegas)  # Debug
+
+    return render_template(
+        'factura.html',
+        menu_items=menu_items,
+        bodegas=bodegas
+    )
+
+@app.route('/generar_factura', methods=['POST'])
+@login_required
+@csrf.exempt
+def generar_factura():
+    try:
+        data = request.get_json()
+        # Validar payload
+        email = data.get('email')
+        bodega_id = data.get('bodega_id')
+        costo_consulta = data.get('costo_consulta')
+        items = data.get('items', [])
+
+        if not all([email, bodega_id, isinstance(items, list)]):
+            return jsonify({'error': 'Datos incompletos'}), 400
+
+        # Convertir IDs y preparar factura
+        user_id = ObjectId(current_user.id)
+        b_id = ObjectId(bodega_id)
+
+        # Insertar factura en la base de datos
+        factura_doc = {
+            'usuario_id': user_id,
+            'bodega_id': b_id,
+            'email_paciente': email,
+            'costo_consulta': costo_consulta,
+            'items': [],
+            'total': 0,
+            'fecha': datetime.utcnow()
+        }
+        total = costo_consulta
+
+        # Procesar cada artículo: deducir inventario y acumular totales
+        for it in items:
+            art_id = ObjectId(it['articulo_id'])
+            cantidad = int(it['cantidad'])
+            precio = float(it.get('precio', 0))
+            subtotal = cantidad * precio
+            total += subtotal
+
+            factura_doc['items'].append({
+                'articulo_id': art_id,
+                'cantidad': cantidad,
+                'precio': precio,
+                'subtotal': subtotal
+            })
+
+            # Deducir inventario en la bodega
+            mongo.db.bodegas.update_one(
+                {'_id': b_id, 'inventario.articulo': art_id},
+                {'$inc': {'inventario.$.cantidad': -cantidad}}
+            )
+
+        # Actualizar total
+        factura_doc['total'] = total
+        mongo.db.facturas.insert_one(factura_doc)
+
+        # Construir cuerpo de correo
+        lineas = [f"Factura generada:\nConsulta: ${costo_consulta:.2f}\n"]
+        for x in factura_doc['items']:
+            art = mongo.db.articulosMed.find_one({'_id': x['articulo_id']}, {'nombre': 1})
+            nombre = art['nombre'] if art else str(x['articulo_id'])
+            lineas.append(f"- {nombre}: {x['cantidad']} x ${x['precio']:.2f} = ${x['subtotal']:.2f}")
+        lineas.append(f"\nTotal: ${total:.2f}")
+        cuerpo = "\n".join(lineas)
+
+        # Enviar correo al paciente
+        msg = Message(
+            subject='📄 Su factura Med Control',
+            recipients=[email],
+            body=cuerpo
+        )
+        mail.send(msg)
+
+        return jsonify({'mensaje': 'Factura generada, guardada y enviada por correo'}), 201
+
+    except Exception as e:
+        print(f"Error en generar_factura: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/obtener_inventarioFact/<bodega_id>', methods=['GET'])
+@login_required
+@csrf.exempt
+def obtener_inventario_detallado(bodega_id):
+    """Devuelve lista de artículos en una bodega con id, nombre, cantidad y precio."""
+    bodega = mongo.db.bodegas.find_one({"_id": ObjectId(bodega_id)})
+    if not bodega:
+        return jsonify({"error": "Bodega no encontrada"}), 404
+
+    inventario = bodega.get("inventario", [])
+    resultado = []
+    for item in inventario:
+        # item["articulo"] es un ObjectId en Mongo
+        art_id = ObjectId(item["articulo"])
+        art_doc = mongo.db.articulosMed.find_one(
+            {"_id": art_id},
+            {"nombre": 1, "precio": 1}  # asumiendo que guardas precio en articulosMed
+        )
+        if not art_doc:
+            continue
+        resultado.append({
+            "articulo_id": str(art_id),
+            "nombre": art_doc["nombre"],
+            "cantidad": item["cantidad"],
+            "precio": float(art_doc.get("precio", 0))
+        })
+
+    return jsonify({"articulos": resultado}), 200
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0')
