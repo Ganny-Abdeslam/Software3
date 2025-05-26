@@ -18,7 +18,9 @@ def client():
 
 @pytest.fixture
 def mongo_db():
-    from app import mongo
-    yield mongo.db
-    mongo.db.users.delete_many({})
+    db_name = f"test_db_{uuid.uuid4().hex}"
+    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    db = client[db_name]
+    yield db
+    client.drop_database(db_name)
 
